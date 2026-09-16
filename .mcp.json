@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "port_forward_manager": {
+      "command": "/usr/bin/python3",
+      "args": ["./mcp_server.py"],
+      "cwd": ".",
+      "enabled": true,
+      "startup_timeout_sec": 10,
+      "tool_timeout_sec": 30,
+      "tools": {
+        "list_port_forwards": {"approval_mode": "allow"},
+        "open_port_forward_dashboard": {"approval_mode": "allow"},
+        "create_fixed_port_forward": {"approval_mode": "prompt"},
+        "update_fixed_port_forward": {"approval_mode": "prompt"},
+        "set_fixed_port_forward_state": {"approval_mode": "prompt"},
+        "stop_temporary_port_forward": {"approval_mode": "prompt"},
+        "solidify_temporary_port_forward": {"approval_mode": "prompt"},
+        "delete_fixed_port_forward": {"approval_mode": "prompt"}
+      }
+    }
+  }
+}

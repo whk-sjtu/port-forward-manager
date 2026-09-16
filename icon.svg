@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Port Forward Manager">
+  <rect width="64" height="64" rx="16" fill="#087f6f"/>
+  <circle cx="18" cy="32" r="7" fill="#fff"/>
+  <circle cx="46" cy="32" r="7" fill="#fff"/>
+  <path d="M27 32h10m-4-5 5 5-5 5" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

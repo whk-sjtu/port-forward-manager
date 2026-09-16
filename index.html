@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Port Forward Manager</title>
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <style>
+    :root { color-scheme: light; --ink:#17212b; --muted:#6d7884; --line:#dde3e8; --paper:#fff; --bg:#f1f4f5; --accent:#087f6f; --accent2:#0b6157; --red:#b43c45; --blue:#3f6db3; --violet:#7757a8; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; background:radial-gradient(circle at 8% 0%,#d9eee9 0,transparent 32rem),linear-gradient(180deg,#f8faf9,#eef2f3); color:var(--ink); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif; }
+    .shell { max-width:1180px; margin:auto; padding:44px 24px 70px; }
+    header { display:flex; align-items:flex-end; justify-content:space-between; gap:24px; margin-bottom:26px; }
+    .brand { display:flex; align-items:center; gap:14px; }
+    .brand-icon { width:52px; height:52px; flex:none; filter:drop-shadow(0 6px 12px #087f6f2e); }
+    .eyebrow { text-transform:uppercase; letter-spacing:.16em; color:var(--accent); font-size:11px; font-weight:800; }
+    h1 { margin:4px 0 5px; font:700 34px/1.1 ui-rounded,-apple-system,sans-serif; letter-spacing:-.035em; }
+    .subtitle { color:var(--muted); max-width:680px; }
+    button { border:0; border-radius:10px; padding:9px 13px; font:600 13px inherit; cursor:pointer; transition:.15s; }
+    button:hover { transform:translateY(-1px); }
+    .primary { color:#fff; background:var(--accent); box-shadow:0 5px 16px #087f6f38; }
+    .primary:hover { background:var(--accent2); }
+    .secondary { background:#edf1f2; color:#34414d; }
+    .pin { background:#e4f6ed; color:#16734d; }
+    .pin:hover { background:#d4f0e2; }
+    .danger { background:#fff0f1; color:var(--red); }
+    .toolbar { display:flex; gap:9px; }
+    .summary { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:17px; }
+    .metric { background:#ffffffbd; border:1px solid #ffffff; box-shadow:0 8px 30px #52616810; border-radius:14px; padding:15px 17px; }
+    .metric b { font-size:24px; display:block; }
+    .metric span { color:var(--muted); font-size:12px; }
+    .panel { overflow:hidden; background:var(--paper); border:1px solid var(--line); border-radius:17px; box-shadow:0 14px 38px #52616812; }
+    .panel-head { padding:15px 18px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--line); }
+    .legend { display:flex; flex-wrap:wrap; gap:10px; color:var(--muted); font-size:12px; }
+    .dot { width:8px; height:8px; display:inline-block; border-radius:50%; margin-right:4px; }
+    .fixed-dot{background:var(--accent)} .codex-dot{background:var(--violet)} .vscode-dot{background:var(--blue)} .ssh-dot{background:#8a929a}
+    table { width:100%; border-collapse:collapse; }
+    th { background:#fafbfb; color:#7a858f; font-size:11px; text-transform:uppercase; letter-spacing:.075em; text-align:left; padding:11px 15px; }
+    td { padding:14px 15px; border-top:1px solid #edf0f2; vertical-align:middle; }
+    tbody tr:hover { background:#fafcfb; }
+    .route { display:flex; align-items:center; gap:9px; min-width:310px; }
+    .endpoint { font:600 13px ui-monospace,SFMono-Regular,Menlo,monospace; }
+    .arrow { color:#a3abb2; }
+    .source { display:inline-flex; align-items:center; border-radius:999px; padding:4px 8px; font-size:11px; font-weight:700; background:#f1f3f5; white-space:nowrap; }
+    .source.fixed{color:var(--accent);background:#e7f5f2}.source.codex{color:var(--violet);background:#f1ebfa}.source.vscode{color:var(--blue);background:#edf2fb}
+    .web-link { color:var(--accent2); font-weight:650; text-decoration:none; white-space:nowrap; }
+    .web-link:hover { text-decoration:underline; }
+    .status { display:flex; align-items:center; gap:6px; color:var(--muted); }
+    .status i { width:8px;height:8px;border-radius:50%;background:#aab1b7;box-shadow:0 0 0 3px #eef0f2; }
+    .status.running i { background:#2ca66f; box-shadow:0 0 0 3px #e2f5ec; }
+    .status.error { color:#a76618; }
+    .status.error i { background:#df922f; box-shadow:0 0 0 3px #fff0d8; }
+    .actions { display:flex; gap:6px; justify-content:flex-end; }
+    .actions button { padding:6px 9px; }
+    .empty { padding:54px;text-align:center;color:var(--muted); }
+    .footer { color:#8a949e; font-size:12px; margin:12px 3px; display:flex; justify-content:space-between; }
+    dialog { width:min(560px,calc(100vw - 28px)); border:0; border-radius:18px; padding:0; box-shadow:0 28px 90px #1b2f3845; }
+    dialog::backdrop { background:#1f303852; backdrop-filter:blur(3px); }
+    .modal { padding:24px; }
+    .modal h2 { margin:0 0 4px; font-size:22px; }
+    .modal p { color:var(--muted); margin:0 0 20px; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:13px; }
+    label { display:grid; gap:5px; color:#65707a; font-size:12px; font-weight:600; }
+    label.full { grid-column:1/-1; }
+    input { width:100%; border:1px solid #ccd4da; border-radius:10px; padding:10px 11px; color:var(--ink); background:#fff; font:14px inherit; outline:none; }
+    input:focus { border-color:var(--accent); box-shadow:0 0 0 3px #0d8d7b1c; }
+    .modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:22px; }
+    .error { min-height:20px; color:var(--red); margin-top:10px; font-size:12px; }
+    .toast { position:fixed; left:50%; bottom:25px; transform:translate(-50%,20px); background:#17212b;color:#fff;border-radius:10px;padding:10px 15px;opacity:0;pointer-events:none;transition:.2s;box-shadow:0 8px 25px #0003; }
+    .toast.show { opacity:1; transform:translate(-50%,0); }
+    @media(max-width:760px){.summary{grid-template-columns:1fr 1fr}header{align-items:flex-start;flex-direction:column}table,tbody,tr,td{display:block}thead{display:none}tr{padding:10px 0;border-top:1px solid var(--line)}td{border:0;padding:5px 14px}.actions{justify-content:flex-start}.grid{grid-template-columns:1fr}.route{min-width:0;flex-wrap:wrap}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div class="brand"><img class="brand-icon" src="/icon.svg" alt=""><div><div class="eyebrow" data-i18n="eyebrow">本地网络工具</div><h1>Port Forward Manager</h1><div class="subtitle" data-i18n="subtitle">统一查看 Codex、VS Code 与固定 SSH 转发。只有固定转发可编辑；所有监听均保持在本机回环地址。</div></div></div>
+      <div class="toolbar"><button class="secondary" id="language">EN</button><button class="secondary" id="refresh" data-i18n="refresh">刷新</button><button class="primary" id="add" data-i18n="add">＋ 新建</button></div>
+    </header>
+    <section class="summary">
+      <div class="metric"><b id="total">—</b><span data-i18n="found">发现的转发</span></div>
+      <div class="metric"><b id="fixed">—</b><span data-i18n="fixedForwards">固定转发</span></div>
+      <div class="metric"><b id="codex">—</b><span data-i18n="codexForwards">Codex 临时转发</span></div>
+      <div class="metric"><b id="vscode">—</b><span data-i18n="vscodeForwards">VS Code 转发</span></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><strong data-i18n="current">当前转发</strong><div class="legend"><span><i class="dot fixed-dot"></i><span data-i18n="fixed">固定</span></span><span><i class="dot codex-dot"></i>Codex</span><span><i class="dot vscode-dot"></i>VS Code</span><span><i class="dot ssh-dot"></i>SSH</span></div></div>
+      <table><thead><tr><th data-i18n="source">来源</th><th data-i18n="route">转发路径</th><th data-i18n="webpage">网页</th><th data-i18n="sshHost">SSH 主机</th><th data-i18n="status">状态</th><th>PID</th><th></th></tr></thead><tbody id="rows"></tbody></table>
+      <div class="empty" id="empty" hidden data-i18n="empty">尚未发现 SSH 转发。</div>
+    </section>
+    <div class="footer"><span data-i18n="footer">仅限 localhost · 每分钟自动刷新</span><span id="updated">—</span></div>
+  </main>
+  <dialog id="editor"><form class="modal" id="form"><h2 id="modalTitle">新建固定转发</h2><p id="modalHint">使用 macOS launchd 自动启动并在断线后重连。</p><div class="grid">
+    <label class="full"><span data-i18n="name">名称</span><input name="name" required maxlength="60" placeholder="例如 Web 服务" data-i18n-placeholder="namePlaceholder"></label>
+    <label><span data-i18n="sshHost">SSH 主机</span><input name="sshHost" list="sshHosts" required placeholder="my-ssh-host"><datalist id="sshHosts"></datalist></label>
+    <label><span data-i18n="localPort">本地端口</span><input name="localPort" type="number" min="1024" max="65535" required placeholder="55000"></label>
+    <label><span data-i18n="remoteHost">远端地址</span><input name="remoteHost" value="127.0.0.1" required></label>
+    <label><span data-i18n="remotePort">远端端口</span><input name="remotePort" type="number" min="1" max="65535" required placeholder="8000"></label>
+    <label class="full"><span data-i18n="bindAddress">本地绑定地址</span><input name="bindAddress" value="127.0.0.1" readonly></label>
+  </div><div class="error" id="error"></div><div class="modal-actions"><button class="secondary" value="cancel" formmethod="dialog" type="button" id="cancel" data-i18n="cancel">取消</button><button class="primary" type="submit" data-i18n="save">保存</button></div></form></dialog>
+  <div class="toast" id="toast"></div>
+<script>
+const I18N={
+zh:{eyebrow:"本地网络工具",subtitle:"统一查看 Codex、VS Code 与固定 SSH 转发。只有固定转发可编辑；所有监听均保持在本机回环地址。",refresh:"刷新",add:"＋ 新建",found:"发现的转发",fixedForwards:"固定转发",codexForwards:"Codex 临时转发",vscodeForwards:"VS Code 转发",current:"当前转发",fixed:"固定",source:"来源",route:"转发路径",webpage:"网页",sshHost:"SSH 主机",status:"状态",empty:"尚未发现 SSH 转发。",footer:"仅限 localhost · 每分钟自动刷新",name:"名称",namePlaceholder:"例如 Web 服务",localPort:"本地端口",remoteHost:"远端地址",remotePort:"远端端口",bindAddress:"本地绑定地址",cancel:"取消",save:"保存",edit:"编辑",start:"启动",stop:"停止",remove:"删除",solidify:"固化",running:"运行中",error:"异常",stopped:"已停止",internal:"由应用内部管理",updated:"更新于",newTitle:"新建固定转发",editTitle:"编辑固定转发",hint:"使用 macOS launchd 自动启动并在断线后重连；固化成功后会自动停止原转发。",refreshed:"已刷新",saved:"保存完成",solidified:"固化完成",deleted:"已删除，可从废纸篓恢复",stopRequested:"已请求停止临时转发",deleteConfirm:n=>`删除固定转发“${n}”？配置会移入废纸篓。`,stopConfirm:(p,s)=>`停止 PID ${p} 所属的 ${s}？同一进程维护的其他连接也可能中断，所属应用可能稍后重建。`,noListener:"本地监听不存在",httpFailed:"HTTP 请求失败",unreachable:"远程端口不可达",connectionFailed:"远程连接失败"},
+en:{eyebrow:"Local network tools",subtitle:"View Codex, VS Code, and persistent SSH forwards in one place. Persistent forwards are editable; every listener stays on loopback.",refresh:"Refresh",add:"＋ New",found:"Discovered forwards",fixedForwards:"Persistent forwards",codexForwards:"Codex temporary",vscodeForwards:"VS Code forwards",current:"Current forwards",fixed:"Fixed",source:"Source",route:"Route",webpage:"Webpage",sshHost:"SSH host",status:"Status",empty:"No SSH forwards found.",footer:"localhost only · refreshes every minute",name:"Name",namePlaceholder:"Example: Web service",localPort:"Local port",remoteHost:"Remote address",remotePort:"Remote port",bindAddress:"Local bind address",cancel:"Cancel",save:"Save",edit:"Edit",start:"Start",stop:"Stop",remove:"Delete",solidify:"Persist",running:"Running",error:"Error",stopped:"Stopped",internal:"Managed by the application",updated:"Updated",newTitle:"New persistent forward",editTitle:"Edit persistent forward",hint:"macOS launchd starts and reconnects this forward. Persisting a temporary forward stops the original after success.",refreshed:"Refreshed",saved:"Saved",solidified:"Persisted",deleted:"Deleted; recoverable from Trash",stopRequested:"Stop requested",deleteConfirm:n=>`Delete “${n}”? Its configuration will be moved to Trash.`,stopConfirm:(p,s)=>`Stop PID ${p} for ${s}? Other connections owned by the same process may be interrupted and the application may recreate it.`,noListener:"Local listener is missing",httpFailed:"HTTP request failed",unreachable:"Remote port is unreachable",connectionFailed:"Remote connection failed"}
+};
+const $=s=>document.querySelector(s),rows=$("#rows"),editor=$("#editor"),form=$("#form");
+let state={forwards:[],sshHosts:[]},editing=null,solidifying=null,lang=localStorage.getItem("pfm-language")||(navigator.language.toLowerCase().startsWith("zh")?"zh":"en");
+const t=k=>I18N[lang][k]??k;
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function notify(text){const n=$("#toast");n.textContent=text;n.classList.add("show");setTimeout(()=>n.classList.remove("show"),1800)}
+async function api(path,options={}){options.headers={"Content-Type":"application/json","X-Port-Forward-Manager":"1",...(options.headers||{})};const r=await fetch(path,options),data=await r.json().catch(()=>({error:r.statusText}));if(!r.ok)throw new Error(data.error||r.statusText);return data}
+function sourceName(x){return x.source==="fixed"?t("fixed"):x.source==="codex"?"Codex":x.source==="vscode"?"VS Code":x.source==="ssh"?"SSH":x.sourceLabel}
+function detailText(value){if(!value||lang==="zh")return value||"";return {"本地监听不存在":t("noListener"),"HTTP 请求失败":t("httpFailed"),"远程端口不可达":t("unreachable"),"远程连接失败":t("connectionFailed")}[value]||value}
+function endpoint(host,port,unknown){return unknown?`<span class="endpoint">${esc(t("internal"))}</span>`:`<span class="endpoint">${esc(host)}:${esc(port)}</span>`}
+function render(){const f=state.forwards,statusText={running:t("running"),error:t("error"),stopped:t("stopped")};$("#total").textContent=f.length;for(const k of ["fixed","codex","vscode"])$("#"+k).textContent=f.filter(x=>x.source===k).length;rows.innerHTML=f.map(x=>`<tr>
+<td><span class="source ${esc(x.source)}">${esc(sourceName(x))}</span></td>
+<td><div class="route">${endpoint(x.bindAddress,x.localPort,false)}<span class="arrow">→</span>${endpoint(x.remoteHost,x.remotePort,!x.remotePort)}</div></td>
+<td>${x.webUrl?`<a class="web-link" href="${esc(x.webUrl)}" target="_blank" rel="noopener noreferrer">${esc(x.webTitle)}</a>`:"—"}</td>
+<td>${esc(x.sshHost||"—")}</td><td><span class="status ${esc(x.status)}" title="${esc(detailText(x.statusDetail))}"><i></i>${esc(statusText[x.status]||x.status)}</span></td><td>${esc(x.pid||"—")}</td>
+<td><div class="actions">${x.editable?`<button class="secondary" data-edit="${esc(x.id)}">${t("edit")}</button><button class="secondary" data-toggle="${esc(x.id)}" data-action="${x.listening?'stop':'start'}">${x.listening?t("stop"):t("start")}</button><button class="danger" data-delete="${esc(x.id)}">${t("remove")}</button>`:`${["codex","vscode"].includes(x.source)?`<button class="pin" data-pin="${esc(x.id)}">${t("solidify")}</button>`:""}${x.stoppable?`<button class="danger" data-stop-live="${esc(x.id)}">${t("stop")}</button>`:""}`}</div></td></tr>`).join("");$("#empty").hidden=!!f.length;$("#sshHosts").innerHTML=state.sshHosts.map(h=>`<option value="${esc(h)}">`).join("");$("#updated").textContent=`${t("updated")} ${new Date(state.updatedAt*1000).toLocaleTimeString(lang==="zh"?"zh-CN":"en-US")}`}
+function applyLanguage(){document.documentElement.lang=lang==="zh"?"zh-CN":"en";document.querySelectorAll("[data-i18n]").forEach(el=>el.textContent=t(el.dataset.i18n));document.querySelectorAll("[data-i18n-placeholder]").forEach(el=>el.placeholder=t(el.dataset.i18nPlaceholder));$("#language").textContent=lang==="zh"?"EN":"中文";if(editor.open){$("#modalTitle").textContent=editing?t("editTitle"):t("newTitle");$("#modalHint").textContent=t("hint")}render()}
+async function load(silent=false){try{state=await api("/api/forwards");render();if(!silent)notify(t("refreshed"))}catch(e){if(!silent)notify(e.message)}}
+function openEditor(item=null,asNew=false){const pinning=!!item&&asNew,values=pinning?{...item,name:`${item.webTitle||sourceName(item)} ${item.suggestedFixedPort}`,localPort:item.suggestedFixedPort}:item;editing=asNew?null:item?.id||null;solidifying=pinning?{pid:item.pid,localPort:item.localPort}:null;$("#modalTitle").textContent=editing?t("editTitle"):t("newTitle");$("#modalHint").textContent=t("hint");form.reset();form.bindAddress.value="127.0.0.1";form.remoteHost.value=values?.remoteHost||"127.0.0.1";for(const k of ["name","sshHost","localPort","remotePort","bindAddress"])if(values?.[k]!=null)form[k].value=values[k];$("#error").textContent="";editor.showModal()}
+$("#language").onclick=()=>{lang=lang==="zh"?"en":"zh";localStorage.setItem("pfm-language",lang);applyLanguage()};$("#add").onclick=()=>openEditor();$("#refresh").onclick=()=>load();$("#cancel").onclick=()=>editor.close();
+form.onsubmit=async e=>{e.preventDefault();const body=Object.fromEntries(new FormData(form)),source=solidifying;body.localPort=Number(body.localPort);body.remotePort=Number(body.remotePort);try{const path=source?`/api/live/${source.pid}/${source.localPort}/solidify`:editing?`/api/profiles/${encodeURIComponent(editing)}`:"/api/profiles",result=await api(path,{method:editing?"PUT":"POST",body:JSON.stringify(body)});editor.close();solidifying=null;notify(result.warning||(source?t("solidified"):t("saved")));setTimeout(()=>load(true),900)}catch(err){$("#error").textContent=err.message}};
+rows.onclick=async e=>{const b=e.target.closest("button");if(!b)return;const id=b.dataset.edit||b.dataset.toggle||b.dataset.delete||b.dataset.stopLive||b.dataset.pin,item=state.forwards.find(x=>x.id===id);if(b.dataset.edit)return openEditor(item);if(b.dataset.pin)return openEditor(item,true);try{if(b.dataset.toggle){await api(`/api/profiles/${encodeURIComponent(item.id)}/${b.dataset.action}`,{method:"POST",body:"{}"});notify(b.dataset.action==="stop"?t("stopped"):t("running"))}else if(b.dataset.delete){if(!confirm(t("deleteConfirm")(item.name)))return;await api(`/api/profiles/${encodeURIComponent(item.id)}`,{method:"DELETE"});notify(t("deleted"))}else if(b.dataset.stopLive){if(!confirm(t("stopConfirm")(item.pid,sourceName(item))))return;await api(`/api/live/${item.pid}/${item.localPort}/stop`,{method:"POST",body:"{}"});notify(t("stopRequested"))}setTimeout(()=>load(true),600)}catch(err){notify(err.message)}};
+applyLanguage();load(true);setInterval(()=>load(true),60000);
+</script>
+</body></html>
